@@ -1,72 +1,76 @@
 import { createContext, useState } from "react";
 import runChat from "../config/pearl";
 
-
-export  const Context = createContext();
+export const Context = createContext();
 
 const ContextProvider = (props) => {
+  const [input, setInput] = useState("");
+  const [recentPrompt, setRecentPrompt] = useState("");
+  const [prevPrompts, setPrevPrompts] = useState([]);
+  const [showResult, setShowResult] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resultData, setResultData] = useState("");
 
-      const [input, setInput] = useState("");
-      const [recentPrompt, setRecentPrompt] = useState("");
-      const [prevPrompts, setPrevPrompts] = useState([]);
-      const [showResult, setShowResult] = useState(false);
-      const [loading,setLoading] = useState(false);
-      const [resultData, setResultData] = useState("");
+  // Format AI response → supports markdown-like text
+  const formatResponse = (text) => {
+    if (!text) return "";
 
-      const delaypara = (index,nextWorld) => {
+    let formatted = text
+      // bold **text**
+      .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+      // italic *text*
+      .replace(/\*(.*?)\*/g, "<i>$1</i>")
+      // line breaks
+      .replace(/\n/g, "<br/>");
 
-      }
+    return formatted;
+  };
 
+  const onSent = async (customPrompt) => {
+    try {
+      setResultData("");
+      setLoading(true);
+      setShowResult(true);
 
-        const onSent = async (prompt) => {
+      const finalPrompt = customPrompt || input;
+      setRecentPrompt(finalPrompt);
 
-            setResultData("")
-            setLoading(true)
-            setShowResult(true)
-            setRecentPrompt(input)
-            const response = await  runChat(input)
-            let responseArray = response.split("**");
-            let newResponse ;
-            for(let i=0; i< responseArray.length; i++)
-            {
-                  if(i==0 || i%2 !==1){
-                        newResponse += responseArray[i];
-                  }
-                  else{
-                        newResponse += "<b>" + responseArray[i] + "</b>";
-                  }
-            }
-            let newResponse2 = newResponse.split("*").join("</br>");
-            setResultData(newResponse)
-            setLoading(false)
-            setInput(" ")
-        }
+      // Keep history
+      setPrevPrompts((prev) => [...prev, finalPrompt]);
 
-        
+      // Call Gemini API
+      const response = await runChat(finalPrompt);
 
+      // Format response
+      const formattedResponse = formatResponse(response);
+      setResultData(formattedResponse);
+    } catch (err) {
+      console.error("❌ Error in onSent:", err.message);
+      setResultData("⚠️ Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+      setInput("");
+    }
+  };
 
-  const contextValue ={
-        prevPrompts,
-        setPrevPrompts,
-        onSent,
-        setRecentPrompt,
-        recentPrompt,
-        showResult,
-        loading,
-        resultData,
-        input,
-        setInput,
-        
+  const contextValue = {
+    prevPrompts,
+    setPrevPrompts,
+    onSent,
+    setRecentPrompt,
+    recentPrompt,
+    showResult,
+    loading,
+    resultData,
+    input,
+    setInput,
+  };
 
+  return (
+    <Context.Provider value={contextValue}>
+      {props.children}
+    </Context.Provider>
+  );
+};
 
-  } 
-   return(
-           <Context.Provider value={contextValue} >
-            {props.children}
-           </Context.Provider>
-   )
-
-}
 export default ContextProvider;
-
-
