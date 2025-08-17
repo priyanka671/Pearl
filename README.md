@@ -2,4 +2,9 @@ HELLO EVERYONE THIS PROJECT IS A SMALL STEP BY ME IN LEARNING GENERATIVE AI . I 
 hope you like it . 
 
 **it is currently at the stage of deployment
+
+
+
+
+
 pearl-4.onrender.com
